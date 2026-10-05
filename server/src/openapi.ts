@@ -434,7 +434,6 @@ export const openApiDocument = {
               createdAt: { type: "string", format: "date-time" },
               totalTradesCompleted: { type: "integer", example: 5 },
               role: { type: "string", example: "user" },
-              kycStatus: { type: "string", enum: ["unverified", "pending", "verified"] },
               virtualAccountNumber: { type: "string", example: "0123456789" },
               stellarPublicKey: { type: "string", example: "GABC1234..." },
               kycStatus: {

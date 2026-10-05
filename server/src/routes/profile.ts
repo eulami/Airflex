@@ -4,6 +4,7 @@ import { z } from "zod";
 import pool from "../db";
 import { authenticate, AuthenticatedRequest } from "../middleware/authenticate";
 import { validate } from "../middleware/validate";
+import { QueueService } from "../jobs";
 import type { TradeOffer, TradeStatus } from "../types/trade";
 import logger from "../utils/logger";
 
@@ -109,9 +110,10 @@ router.get(
       role: string;
       kyc_status: "unverified" | "pending" | "verified";
       virtual_account_number: string | null;
+      referral_code: string | null;
     }>(
       `SELECT id, phone, created_at, stellar_public_key, role, kyc_status,
-              virtual_account_number
+              virtual_account_number, referral_code
        FROM users
        WHERE id = $1
        LIMIT 1`,
@@ -141,10 +143,9 @@ router.get(
         createdAt:            user.created_at,
         totalTradesCompleted,
         role:                 user.role,
-        kycStatus:            user.kyc_status,
+        kycStatus:            user.kyc_status ?? "unverified",
         virtualAccountNumber: user.virtual_account_number ?? "",
         stellarPublicKey:     user.stellar_public_key ?? "",
-        kycStatus:            user.kyc_status ?? "unverified",
         referralCode:         user.referral_code ?? "",
       },
     });
@@ -222,7 +223,10 @@ router.get(
     }).safeParse(req.query);
 
     if (!parsedPagination.success) {
-      res.status(400).json({ error: "Invalid query parameters", details: parsedPagination.error.flatten() });
+      res.status(400).json({
+        error: "Invalid query parameters",
+        details: parsedPagination.error.flatten(),
+      });
       return;
     }
 
